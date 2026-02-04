@@ -1,4 +1,4 @@
-# Tarock Schreiben
+# Tarock (Königsrufen) Schreiben
 
 Kleine, browserbasierte HTML/JS-App zum Schreiben von Tarock-Runden.  
 Läuft komplett lokal im Browser – kein Backend, keine Abhängigkeiten.

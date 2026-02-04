@@ -4,202 +4,322 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tarock Log</title>
-  <style>
-    :root{
-      --bg:#0b1220; --card:#111a2e; --muted:#9fb0d0; --text:#eef2ff;
-      --line:rgba(255,255,255,.12); --good:#2dd4bf; --bad:#fb7185; --warn:#fbbf24; --btn:#3b82f6;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      background: linear-gradient(180deg, #0b1220 0%, #070b14 100%);
-      color:var(--text);
-    }
-    .wrap{max-width:980px;margin:0 auto;padding:8px;display:grid;gap:8px}
-    .card{background:rgba(17,26,46,.92);border:1px solid var(--line);border-radius:14px;padding:10px;overflow:hidden; }
-    /* Kompakte Controls oben */
-    .grid{display:grid;gap:6px}
-    .grid.controls{grid-template-columns: 1.15fr .45fr .70fr}
-    
-    @media (max-width: 360px){ .grid.controls{grid-template-columns: 1fr;} }
+<style>
+  :root{
+    --bg:#0b1220; --card:#111a2e; --muted:#9fb0d0; --text:#eef2ff;
+    --line:rgba(255,255,255,.12); --good:#2dd4bf; --bad:#fb7185; --warn:#fbbf24; --btn:#3b82f6;
+  }
 
-    label{display:block;font-size:11px;color:var(--muted);margin:0 0 4px}
-    select,input[type="number"],input[type="text"]{
-      width:100%;
-      padding:8px 10px;
-      border-radius:12px;
-      border:1px solid var(--line);
-      background:rgba(0,0,0,.22);
-      color:var(--text);
-      outline:none;
-    }
-    
-    .names.namesCompact{
-      display:flex;
-      gap:6px;
-      overflow:auto;
-      -webkit-overflow-scrolling:touch;
-      padding:2px 0;
-    }
+  *{ box-sizing:border-box; }
 
-    /* jedes Name-Item (das JS erzeugt) */
-    .names.namesCompact > div{
-      flex: 0 0 auto;
-      min-width: 64px;   /* kleiner = weniger breit */
-    }
+  html, body{
+    max-width:100%;
+    overflow-x:hidden; /* verhindert „Seite wird breiter als Handy“ */
+  }
 
-    /* Label komplett weg (falls es noch existiert) */
-    .names.namesCompact label{
-      display:none !important;
-    }
+  body{
+    margin:0;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    background: linear-gradient(180deg, #0b1220 0%, #070b14 100%);
+    color:var(--text);
+  }
 
-    /* Input flach + schmal */
+  .wrap{
+    max-width:980px;
+    margin:0 auto;
+    width:100%;
+    padding:8px;
+    display:grid;
+    gap:8px;
+  }
+
+  .card{
+    background:rgba(17,26,46,.92);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:10px;
+    width:100%;
+    max-width:100%;
+    overflow:hidden; /* wichtig gegen „rausdrücken“ */
+  }
+
+  /* Controls */
+  label{ display:block; font-size:11px; color:var(--muted); margin:0 0 4px; }
+
+  select, input[type="number"], input[type="text"]{
+    width:100%;
+    padding:8px 10px;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:rgba(0,0,0,.22);
+    color:var(--text);
+    outline:none;
+  }
+
+  /* Namen: horizontal scroll, Desktop etwas breiter, Mobile fix schmal */
+  .names.namesCompact{
+    display:flex;
+    gap:6px;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    padding:2px 0;
+  }
+
+  .names.namesCompact label{ display:none !important; }
+
+  .names.namesCompact > div{
+    flex:0 0 auto;
+    min-width:0;
+  }
+
+  .names.namesCompact input{
+    width:96px;      /* Desktop default */
+    max-width:96px;
+    padding:6px 8px;
+    font-size:12px;
+    border-radius:10px;
+  }
+
+  /* Spieler: Desktop 5 Spalten, Mobile horizontal scroll */
+  .players{
+    display:grid;
+    gap:6px;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .pbox{
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:6px;
+    background:rgba(0,0,0,.16);
+    min-width:0;
+  }
+
+  .pname{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin:0 0 6px;
+  }
+
+  .dot{ display:none; }
+
+  .pname strong{
+    font-size:11px;
+    font-weight:700;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  /* G/V/- Buttons: Desktop nebeneinander, Mobile untereinander */
+  .seg{
+    display:flex;
+    flex-direction: column;  /* immer untereinander */
+    gap:4px;
+  }
+
+
+  .seg input{ display:none; }
+
+  .seg label.btn{
+    flex:1 1 0;
+    text-align:center;
+    padding:7px 0;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.04);
+    color:var(--text);
+    font-size:0;      /* Text verstecken, wir nutzen ::after */
+    line-height:1;
+    user-select:none;
+    cursor:pointer;
+  }
+
+  .seg input:checked + label.btn{
+    background:rgba(255,255,255,.10);
+    border-color:rgba(255,255,255,.25);
+  }
+
+  .seg input[data-role="W"]:checked + label.btn{ background: rgba(45,212,191,.18); border-color: rgba(45,212,191,.45); }
+  .seg input[data-role="L"]:checked + label.btn{ background: rgba(251,113,133,.18); border-color: rgba(251,113,133,.45); }
+  .seg input[data-role="O"]:checked + label.btn{ background: rgba(251,191,36,.16); border-color: rgba(251,191,36,.45); }
+
+  .seg input[data-role="W"] + label.btn::after{ content:"G"; font-size:12px; font-weight:800; }
+  .seg input[data-role="L"] + label.btn::after{ content:"V"; font-size:12px; font-weight:800; }
+  .seg input[data-role="O"] + label.btn::after{ content:"-"; font-size:12px; font-weight:900; }
+
+  /* Aktionen */
+  .actions{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+  }
+
+  .msg{
+    font-size:12px;
+    color:var(--muted);
+    min-height:14px;
+  }
+
+  button{
+    border:0;
+    border-radius:12px;
+    padding:9px 10px;
+    font-weight:700;
+    cursor:pointer;
+    background:var(--btn);
+    color:white;
+    box-shadow:0 10px 22px rgba(59,130,246,.18);
+    font-size:13px;
+    line-height:1;
+  }
+
+  button.secondary{
+    background:rgba(255,255,255,.08);
+    box-shadow:none;
+    border:1px solid var(--line);
+  }
+
+  .btnrow{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+
+  /* Trail unter Prämie */
+  .trail{
+    margin-top:4px;
+    font-size:11px;
+    color:var(--muted);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  /* Tabelle */
+  .tableWrap{
+    width:100%;
+    max-width:100%;
+    overflow:auto;
+    -webkit-overflow-scrolling:touch;
+    max-height:46vh;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:rgba(0,0,0,.14);
+  }
+
+  table{
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0;
+    min-width:680px;
+  }
+
+  thead th{
+    position:sticky;
+    top:0;
+    background:rgba(17,26,46,.98);
+    z-index:1;
+  }
+
+  th, td{
+    padding:8px 8px;
+    border-bottom:1px solid var(--line);
+    border-right:1px solid var(--line);
+    font-size:12px;
+    white-space:nowrap;
+    line-height:1.15;
+  }
+
+  th:last-child, td:last-child{ border-right:0; }
+
+  td.pos{ color:var(--good); font-weight:800; }
+  td.neg{ color:var(--bad); font-weight:800; }
+  td.zero{ color:var(--muted); font-weight:700; }
+
+  .sumrow td{
+    border-top:1px solid var(--line); /* Linie über Summe */
+    background:rgba(255,255,255,.05);
+    font-weight:900;
+  }
+
+  /* Alles „Kommentarige“ ausblenden, falls noch irgendwo vorhanden */
+  .hint,.pill,.foot{ display:none !important; }
+
+  /* Mobile Anpassungen */
+  @media (max-width: 600px){
+    /* Namen schmaler */
     .names.namesCompact input{
+      width:60px;
+      max-width:60px;
       padding:4px 6px;
       font-size:11px;
-      border-radius:10px;
     }
 
-    /* ganz kleine Handys */
-    @media (max-width: 360px){
-      .names.namesCompact > div{ min-width: 40px; }
-      .names.namesCompact input{ font-size:10.5px; padding:4px 5px; }
-    }
-    
-
-
-
-
-    .seg{
-      display:flex;
-      flex-direction: column;  /* Buttons untereinander */
-      gap:4px;
-    }
-    .seg label.btn{
-      padding:7px 0;           /* bleibt kompakt */
-    }
-
-    /* Spieler-Auswahl: 5 Spalten auch am Handy */
-    .players{display:grid;gap:6px;grid-template-columns: repeat(5, minmax(0, 1fr));}
-    .pbox{border:1px solid var(--line);border-radius:12px;padding:6px;background:rgba(0,0,0,.16);min-width:0}
-    .pname{display:flex;align-items:center;gap:6px;margin:0 0 6px}
-    .dot{display:none}
-    .pname strong{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-    @media (max-width: 600px){
-      .players{
-        display: flex !important;
-        gap: 8px;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: 4px;
-      }
-
-      .pbox{ flex: 0 0 60px; }
-      .names.namesCompact > div{
-        flex: 0 0 auto;
-        min-width: 0;           /* wichtig */
-      }
-
-      .names.namesCompact input{
-        width: 60px;            /* <- FIX: feste Breite */
-        max-width: 96px;
-        padding: 4px 6px;
-        font-size: 11px;
-      }
-            
-
-      
-      
-    }
-
-
-
-
-    /* Gewinner/Verlierer/Ausgesetzt: als G/V/- */
-
-    .seg input{display:none}
-    .seg label.btn{
-      flex:1 1 0;
-      text-align:center;
-      padding:7px 0;
-      border-radius:10px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.04);
-      color:var(--text);
-      font-size:0;          /* Text verstecken */
-      line-height:1;
-      user-select:none;
-      cursor:pointer;
-    }
-    .seg input:checked + label.btn{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.25)}
-    .seg input[data-role="W"]:checked + label.btn{background: rgba(45,212,191,.18); border-color: rgba(45,212,191,.45);}
-    .seg input[data-role="L"]:checked + label.btn{background: rgba(251,113,133,.18); border-color: rgba(251,113,133,.45);}
-    .seg input[data-role="O"]:checked + label.btn{background: rgba(251,191,36,.16); border-color: rgba(251,191,36,.45);}
-
-    .seg input[data-role="W"] + label.btn::after{content:"G";font-size:12px;font-weight:800}
-    .seg input[data-role="L"] + label.btn::after{content:"V";font-size:12px;font-weight:800}
-    .seg input[data-role="O"] + label.btn::after{content:"-";font-size:12px;font-weight:900}
-
-    /* Aktionen kompakt */
-    .actions{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-    .msg{font-size:12px;color:var(--muted);min-height:14px}
-    button{
-      border:0;border-radius:12px;padding:9px 10px;font-weight:700;cursor:pointer;
-      background:var(--btn);color:white;box-shadow:0 10px 22px rgba(59,130,246,.18);font-size:13px;line-height:1;
-    }
-    button.secondary{background:rgba(255,255,255,.08);box-shadow:none;border:1px solid var(--line)}
-    .btnrow{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-
-    /* Unnötige Texte ausblenden (falls noch vorhanden) */
-    .hint,.pill,.foot{display:none !important}
-
-    /* Tabelle: in Scrollfeld */
-
-    .tableWrap{
-      width: 100%;
-      max-width: 100%;
-      overflow:auto;
+    /* Spieler horizontal scroll (statt 5 Spalten quetschen) */
+    .players{
+      display:flex !important;
+      gap:8px;
+      overflow-x:auto;
       -webkit-overflow-scrolling:touch;
-      max-height: 46vh;
-      border-radius: 12px;
-      border: 1px solid var(--line);
-      background: rgba(0,0,0,.14);
-    }
-    
-    
-    table{width:100%;border-collapse:separate;border-spacing:0;min-width: 680px;}
-    thead th{position:sticky;top:0;background:rgba(17,26,46,.98);z-index:1}
-    th,td{padding:8px 8px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);font-size:12px;white-space:nowrap}
-    th:last-child,td:last-child{border-right:0}
-    tbody tr:last-child td{border-bottom:0}
-    td.pos{color:var(--good);font-weight:800}
-    td.neg{color:var(--bad);font-weight:800}
-    td.zero{color:var(--muted);font-weight:700}
-
-    .trail{
-      margin-top:4px;
-      font-size:11px;
-      color:var(--muted);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
+      padding-bottom:4px;
     }
 
-    @media (max-width: 600px){    
-      th, td{
-        padding: 5px 6px;   /* kleiner */
-        font-size: 11.5px;  /* kleiner */
-        line-height: 1.1;   /* kompakter */
-      }
+    .pbox{ flex:0 0 60px; }
 
-      table{
-        min-width: 520px;   /* optional: weniger breit */
-      }
+    /* G/V/- untereinander am Handy */
+    .seg{ flex-direction:column; }
+
+    /* Tabelle kompakter + weniger min-width */
+    th, td{
+      padding:5px 6px;
+      font-size:11.5px;
+      line-height:1.1;
     }
-    
-  </style>
+
+    table{ min-width:520px; }
+  }
+
+  @media (max-width: 360px){
+    .names.namesCompact input{
+      width:52px;
+      max-width:52px;
+      font-size:10.5px;
+      padding:4px 5px;
+    }
+  }
+
+/* Spaltenausrichtung in der Ergebnistabelle */
+#table th:nth-child(1),
+#table td:nth-child(1){
+  text-align:left;          /* Datum/Zeit links */
+}
+
+#table th:nth-child(n+2):nth-child(-n+7),
+#table td:nth-child(n+2):nth-child(-n+7){
+  text-align:center;        /* Spieler + Spielerresultate mittig (Spalten 2..7) */
+}
+
+#table th:nth-child(8),
+#table td:nth-child(8){
+  text-align:left;          /* Spiel links */
+}
+
+#table th:nth-child(9),
+#table td:nth-child(9),
+#table th:nth-child(10),
+#table td:nth-child(10){
+  text-align:center;        /* Punkte + Prämie mittig */
+}
+  
+  
+  
+</style>
+
 </head>
 <body>
 <div class="wrap">
@@ -236,13 +356,18 @@
             <select id="bonusPick">
               <option value="" selected>+ Prämie wählen…</option>
               <option value="0">— Reset (0) —</option>
-              <option value="1">König Ultimo: +1</option>
-              <option value="1">Trull: +1</option>
-              <option value="1">4 Könige: +1</option>
-              <option value="1">Pagat: +1</option>
-              <option value="2">Uhu: +2</option>
-              <option value="3">Kakadu: +3</option>
-                                                      
+              <option value="1">König Ultimo (still): +1</option>
+              <option value="1">Trull (still): +1</option>
+              <option value="1">4 Könige (still): +1</option>
+              <option value="1">Pagat (still): +1</option>
+              <option value="2">Uhu (still): +2</option>
+              <option value="3">Kakadu (still): +3</option>
+              <option value="2">König Ultimo: +2</option>
+              <option value="2">Trull: +2</option>
+              <option value="2">4 Könige: +2</option>
+              <option value="2">Pagat: +2</option>
+              <option value="4">Uhu: +4</option>
+              <option value="6">Kakadu: +6</option>                                                      
             </select>
     </div>
     
@@ -290,12 +415,14 @@
       <table id="table">
         <thead>
         <tr>
-          <th>Zeit</th>
+          <th id="hDate">Datum</th>
           <th id="h0">Spieler 1</th>
           <th id="h1">Spieler 2</th>
           <th id="h2">Spieler 3</th>
           <th id="h3">Spieler 4</th>
           <th id="h4">Spieler 5</th>
+          <th id="h5">Spieler 6</th>
+          
           <th>Spiel</th>
           <th>Punkte</th>
           <th>Prämie</th>
@@ -311,6 +438,8 @@
           <td id="s2">0</td>
           <td id="s3">0</td>
           <td id="s4">0</td>
+          <td id="s5">0</td>
+          
           <td></td>
           <td></td>
           <td></td>
@@ -352,9 +481,9 @@
 
   // --- State ---
   const state = {
-    names: ["Spieler 1","Spieler 2","Spieler 3","Spieler 4","Spieler 5"],
-    totals: [0,0,0,0,0],
-    rounds: [] // {time, game, base, bonus, deltas[5]}
+    names: ["Spieler 1","Spieler 2","Spieler 3","Spieler 4","Spieler 5","Spieler 6"],
+    totals: [0,0,0,0,0,0],
+    rounds: [] // {time, game, base, bonus, deltas[6]}
   };
   
   const STORAGE_KEY = "tarockLog_v1";
@@ -416,7 +545,7 @@
       return;
     }
     // totals zurückrechnen
-    for (let i=0;i<5;i++){
+    for (let i=0;i<6;i++){
       state.totals[i] -= last.deltas[i];
     }
     renderTable();
@@ -443,7 +572,9 @@
       inp.type = "text";
       inp.value = n;
       inp.addEventListener("input", () => {
-        state.names[i] = inp.value.trim() || `Spieler ${i+1}`;
+        // state.names[i] = inp.value.trim() || `Spieler ${i+1}`;
+        state.names[i] = inp.value.trim();
+        
         updateHeaders();
         renderPlayers(); // names on boxes
         renderTable();   // reflect header names in existing rows
@@ -456,7 +587,11 @@
   }
 
   function updateHeaders(){
-    for (let i=0; i<5; i++){
+    // Datum im Header (erste Spalte)
+    const thDate = document.getElementById("hDate");
+    if (thDate) thDate.textContent = new Date().toLocaleDateString("de-AT");
+    
+    for (let i=0; i<6; i++){
       const th = document.getElementById("h"+i);
       if (th) th.textContent = state.names[i];
     }
@@ -468,6 +603,10 @@
     state.names.forEach((name, idx) => {
       const box = document.createElement("div");
       box.className = "pbox";
+            
+      if ((name || "").trim() === "") {
+        box.style.display = "none";
+      }
 
       const head = document.createElement("div");
       head.className = "pname";
@@ -520,7 +659,7 @@
   function getRoles(){
     // returns array of "W"|"L"|"O"
     const roles = [];
-    for (let i=0;i<5;i++){
+    for (let i=0;i<6;i++){
       const sel = document.querySelector(`input[name="p${i}"]:checked`);
       roles.push(sel ? sel.value : "O");
     }
@@ -567,7 +706,7 @@
     });
 
     // Ausgesetzt immer 0
-    const deltas = [0,0,0,0,0];
+    const deltas = [0,0,0,0,0,0];
 
     // valid patterns with 4 active players (outs 1) or 4 active (outs 1) or 4 active (outs 1) or 4 active (outs 1)
     // also allow 2W2L with 1 out, or without out (would require 4 players only -> but we always have 5; still allow 2W2L + 1O)
@@ -578,9 +717,10 @@
     const tooManyActive = (w + l) > 4 || o < 1; // because with 5 players, these patterns imply exactly 1 out
     // However user didn't explicitly say "immer 1 ausgesetzt". But patterns mention 4 participants.
     // We'll support both: either exactly 1 out OR exactly 0 out with 4 players not possible, so keep rule: allow o>=1 and (w+l)==4
-    const activeOk = (w + l) === 4; // ensures 1 out (since 5 total)
+    const activeOk = ((w + l) === 4)  || ((w + l) === 2) ; // ensure 4 or special case 
+    
     if (!activeOk){
-      return { ok:false, reason:`Bitte genau <b>4 aktive Spieler</b> wählen (Gewinner/Verlierer) und <b>1× Ausgesetzt</b>. Aktuell: ${w} Gewinner, ${l} Verlierer, ${o} ausgesetzt.` };
+      return { ok:false, reason:`Bitte genau <b>4 aktive Spieler</b> wählen (Gewinner/Verlierer). Aktuell: ${w} Gewinner, ${l} Verlierer, ${o} ausgesetzt.` };
     }
 
     // Case A: 2W/2L
@@ -610,6 +750,17 @@
       return { ok:true, deltas, label:"3L/1W" };
     }
 
+    // Special Case D Trischaken: 1L/1W
+    if (w===1 && l===1){
+      // Verlierer minus, Gewinner plus
+      losers.forEach(i => deltas[i] = (-3*base-3*bonus));
+      winners.forEach(i => deltas[i] = (3*base + 3*bonus));   // gewinnt gegen 1 Verlierer
+      outs.forEach(i => deltas[i] = 0);
+      return { ok:true, deltas, label:"1L/1W" };
+    }
+
+
+
     return { ok:false, reason:`Ungültige Kombination: ${w} Gewinner, ${l} Verlierer, ${o} ausgesetzt. Erlaubt: 2/2, 3/1, 1/3 (jeweils mit 1× Ausgesetzt).` };
   }
 
@@ -627,7 +778,8 @@
       // Spieler 1..5 (Deltas)
       r.deltas.forEach((d)=>{
         const td = document.createElement("td");
-        td.textContent = fmtDelta(d);
+        if(d!=0) td.textContent = fmtDelta(d);
+        else td.textContent = ""
         td.className = cellClass(d);
         tr.appendChild(td);
       });
@@ -645,7 +797,7 @@
       tbody.appendChild(tr);
     }
     // update sums
-    for (let i=0;i<5;i++){
+    for (let i=0;i<6;i++){
       const el = document.getElementById("s"+i);
       if (!el) continue;
       const v = state.totals[i];
@@ -659,7 +811,7 @@
 
   function resetRound(){
     // set all to Ausgesetzt
-    for (let i=0;i<5;i++){
+    for (let i=0;i<6;i++){
       const r = document.getElementById(`p${i}_O`);
       if (r) r.checked = true;
     }
@@ -668,7 +820,7 @@
 
   function clearAll(){
     state.rounds = [];
-    state.totals = [0,0,0,0,0];
+    state.totals = [0,0,0,0,0,0];
     renderTable();
     localStorage.removeItem(STORAGE_KEY); // optional
     setMsg("Alles gelöscht.");
@@ -819,7 +971,7 @@
     const deltas = res.deltas;
 
     // apply totals
-    for (let i=0;i<5;i++){
+    for (let i=0;i<6;i++){
       state.totals[i] += deltas[i];
     }
 

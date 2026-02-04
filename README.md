@@ -26,7 +26,7 @@ Sollte auch am Handy (schmal) laufen
 
 1. Spielernamen eingeben  
    → leer lassen = Spieler wird ausgeblendet
-2. Pro Runde genau **4 Spieler aktiv** setzen
+2. Pro Runde genau **4 Spieler aktiv** setzen (Gewinner, Verlierer)
 3. Spieltyp und Punkte wählen
 4. Runde schreiben
 5. Letzte Runde kann rückgängig gemacht werden
